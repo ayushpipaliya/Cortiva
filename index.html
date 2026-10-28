@@ -1,0 +1,856 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cortiva — Software, Built to Run Your Whole Business</title>
+<meta name="description" content="Cortiva builds web platforms, mobile apps, cloud infrastructure and AI-driven software for businesses in Ahmedabad and beyond.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0c0a08;
+    --surface:#161209;
+    --surface-2:#1d1811;
+    --line:#332c20;
+    --ivory:#f3eee3;
+    --muted:#96907f;
+    --gold:#b8912f;
+    --gold-bright:#e3c169;
+    --radius:3px;
+    --ease:cubic-bezier(.22,.9,.32,1);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--ivory);
+    font-family:'Inter', sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  h1,h2,h3,.serif{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    letter-spacing:-0.01em;
+    color:var(--ivory);
+  }
+  a{color:inherit; text-decoration:none;}
+  img,svg{display:block; max-width:100%;}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 32px;}
+  ::selection{background:var(--gold); color:#0c0a08;}
+  :focus-visible{outline:2px solid var(--gold-bright); outline-offset:3px;}
+  section{padding:120px 0; position:relative;}
+
+  /* ---------- 3D background canvas ---------- */
+  #scene{
+    position:fixed; inset:0; width:100%; height:100%;
+    z-index:0; pointer-events:none;
+  }
+  .grain{
+    position:fixed; inset:0; z-index:1; pointer-events:none;
+    opacity:0.035; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  main, header, footer{position:relative; z-index:2;}
+
+  /* ---------- Loader ---------- */
+  #loader{
+    position:fixed; inset:0; z-index:200;
+    background:var(--bg);
+    display:flex; align-items:center; justify-content:center;
+    transition:opacity .8s var(--ease), visibility .8s;
+  }
+  #loader.done{opacity:0; visibility:hidden;}
+  .loader-mark{
+    font-family:'Fraunces', serif; font-size:2.4rem; font-weight:600;
+    perspective:600px;
+    display:flex;
+  }
+  .loader-mark span{
+    display:inline-block;
+    opacity:0; transform:rotateX(90deg) translateY(20px);
+    animation:letterIn .7s var(--ease) forwards;
+  }
+  .loader-mark span.gold{color:var(--gold);}
+  @keyframes letterIn{ to{opacity:1; transform:rotateX(0) translateY(0);} }
+
+  /* ---------- Header ---------- */
+  header{
+    position:sticky; top:0; z-index:100;
+    background:rgba(12,10,8,0.85);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 32px; max-width:1180px; margin:0 auto;
+  }
+  .logo{font-family:'Fraunces', serif; font-size:1.5rem; font-weight:600; letter-spacing:0.01em;}
+  .logo span{color:var(--gold);}
+  .nav-links{display:flex; gap:34px; align-items:center; font-size:0.94rem;}
+  .nav-links a{color:var(--muted); transition:color 0.2s ease; border-bottom:1px solid transparent; padding-bottom:3px;}
+  .nav-links a:hover, .nav-links a.active{color:var(--ivory); border-color:var(--gold);}
+  .btn{
+    display:inline-block; padding:13px 28px; background:var(--gold); color:#0c0a08;
+    font-weight:600; font-size:0.92rem; border-radius:var(--radius);
+    transition:transform .25s var(--ease), box-shadow .25s var(--ease), background .2s ease;
+    border:1px solid var(--gold);
+    box-shadow:0 4px 0 rgba(0,0,0,.3), 0 10px 24px -12px rgba(184,145,47,.6);
+    transform-style:preserve-3d;
+  }
+  .btn:hover{background:var(--gold-bright); border-color:var(--gold-bright); transform:translateY(-3px) rotateX(6deg);}
+  .btn:active{transform:translateY(1px); box-shadow:0 1px 0 rgba(0,0,0,.3);}
+  .btn-outline{background:transparent; color:var(--ivory); border:1px solid var(--line); box-shadow:none;}
+  .btn-outline:hover{border-color:var(--gold); color:var(--gold-bright); background:transparent; transform:translateY(-3px);}
+  .menu-toggle{display:none; flex-direction:column; gap:5px; background:none; border:none; cursor:pointer;}
+  .menu-toggle span{width:24px; height:2px; background:var(--ivory);}
+
+  /* ---------- Hero ---------- */
+  .hero{padding:130px 0 90px; min-height:88vh; display:flex; align-items:center;}
+  .hero-eyebrow-line{display:flex; align-items:center; gap:14px; margin-bottom:26px; color:var(--muted); font-size:0.92rem;}
+  .hero-eyebrow-line::before{content:''; width:34px; height:1px; background:var(--gold);}
+  .hero h1{font-size:clamp(2.5rem, 6vw, 4.4rem); line-height:1.06; max-width:18ch; perspective:800px;}
+  .hero h1 .word{display:inline-block; opacity:0; transform:translateY(40px) rotateX(-60deg); transform-origin:bottom; animation:wordIn .9s var(--ease) forwards;}
+  @keyframes wordIn{ to{opacity:1; transform:translateY(0) rotateX(0);} }
+  .hero h1 em{font-style:italic; color:var(--gold-bright);}
+  .hero p.lede{margin-top:28px; max-width:48ch; color:var(--muted); font-size:1.12rem; opacity:0; animation:fadeUp .9s var(--ease) forwards; animation-delay:.5s;}
+  .hero-actions{margin-top:40px; display:flex; gap:16px; flex-wrap:wrap; opacity:0; animation:fadeUp .9s var(--ease) forwards; animation-delay:.65s;}
+  .hero-stats{display:flex; gap:48px; margin-top:70px; padding-top:32px; border-top:1px solid var(--line); opacity:0; animation:fadeUp .9s var(--ease) forwards; animation-delay:.8s;}
+  .stat b{font-family:'Fraunces', serif; font-size:2.1rem; display:block; color:var(--ivory);}
+  .stat span{color:var(--muted); font-size:0.88rem;}
+  @keyframes fadeUp{ to{opacity:1; transform:translateY(0);} }
+
+  /* ---------- Section head ---------- */
+  .section-head{
+    display:flex; justify-content:space-between; align-items:flex-end; gap:40px;
+    margin-bottom:60px; border-bottom:1px solid var(--line); padding-bottom:32px;
+  }
+  .section-head h2{font-size:clamp(2rem, 3.4vw, 2.7rem); max-width:16ch;}
+  .section-head p{color:var(--muted); max-width:36ch; font-size:1rem;}
+  .reveal{opacity:0; transform:translateY(50px) rotateX(8deg); transform-origin:top; transition:opacity .9s var(--ease), transform .9s var(--ease);}
+  .reveal.in{opacity:1; transform:translateY(0) rotateX(0);}
+
+  /* ---------- Services flip grid ---------- */
+  .services-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:22px;}
+  .flip-card{perspective:1200px; height:260px;}
+  .flip-inner{
+    position:relative; width:100%; height:100%; transform-style:preserve-3d;
+    transition:transform .7s var(--ease);
+    border:1px solid var(--line); border-radius:var(--radius);
+  }
+  .flip-card.flipped .flip-inner{transform:rotateY(180deg);}
+  @media (hover:hover){ .flip-card:hover .flip-inner{transform:rotateY(180deg);} }
+  .flip-front, .flip-back{
+    position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+    padding:34px; display:flex; flex-direction:column; justify-content:space-between;
+    background:var(--surface); border-radius:var(--radius);
+  }
+  .flip-back{transform:rotateY(180deg); background:var(--surface-2);}
+  .service-index{font-family:'Fraunces', serif; color:var(--gold); font-size:1rem;}
+  .flip-front h3{font-size:1.35rem;}
+  .flip-front .hint{color:var(--muted); font-size:0.82rem;}
+  .flip-back p{color:var(--muted); font-size:0.98rem;}
+  .flip-back h4{color:var(--gold-bright); font-size:0.95rem; margin-bottom:12px; font-weight:500;}
+
+  /* ---------- Process rail ---------- */
+  .process-rail{position:relative; padding-top:10px;}
+  .rail-line{position:absolute; top:39px; left:0; right:0; height:2px; background:var(--line);}
+  .rail-fill{position:absolute; top:39px; left:0; height:2px; width:0%; background:linear-gradient(90deg,var(--gold),var(--gold-bright)); transition:width 1.2s var(--ease);}
+  .process{display:grid; grid-template-columns:repeat(4,1fr); gap:24px; position:relative;}
+  .process-step{padding-top:0;}
+  .num-node{
+    width:78px; height:78px; border-radius:50%; background:var(--surface); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; margin-bottom:26px;
+    font-family:'Fraunces', serif; font-size:1.4rem; color:var(--gold);
+    transform:translateZ(0) scale(1); transition:transform .5s var(--ease), background .5s ease, border-color .5s ease, box-shadow .5s ease;
+    transform-style:preserve-3d;
+  }
+  .process-step.active .num-node{
+    background:var(--gold); color:#0c0a08; border-color:var(--gold-bright);
+    transform:scale(1.12) rotateY(360deg); box-shadow:0 14px 30px -10px rgba(184,145,47,.55);
+  }
+  .process-step h3{font-size:1.18rem; margin-bottom:10px;}
+  .process-step p{color:var(--muted); font-size:0.94rem;}
+
+  /* ---------- About ---------- */
+  .about{display:grid; grid-template-columns:0.9fr 1.1fr; gap:70px; align-items:center;}
+  .about-visual{
+    background:var(--surface); border:1px solid var(--line); padding:46px; position:relative;
+    transform-style:preserve-3d; transition:transform .3s var(--ease);
+    border-radius:var(--radius);
+  }
+  .about-visual .quote{font-family:'Fraunces', serif; font-style:italic; font-size:1.45rem; line-height:1.4; color:var(--ivory);}
+  .about-visual .quote-attr{margin-top:22px; color:var(--muted); font-size:0.9rem;}
+  .about-copy p{color:var(--muted); margin-bottom:20px; font-size:1.03rem; max-width:52ch;}
+  .about-copy h2{margin-bottom:24px; font-size:clamp(1.9rem,3vw,2.4rem);}
+  .about-list{margin-top:30px; display:grid; grid-template-columns:1fr 1fr; gap:18px 30px;}
+  .about-list li{list-style:none; color:var(--ivory); font-size:0.96rem; padding-left:22px; position:relative;}
+  .about-list li::before{content:''; position:absolute; left:0; top:9px; width:10px; height:1px; background:var(--gold);}
+
+  /* ---------- Business profile card ---------- */
+  .profile-wrap{display:flex; justify-content:center;}
+  .profile-card{width:100%; max-width:640px; perspective:1600px;}
+  .profile-inner{position:relative; width:100%; min-height:620px; transform-style:preserve-3d; transition:transform 1s var(--ease);}
+  .profile-inner.flipped{transform:rotateY(180deg);}
+  .profile-face{
+    position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+    background:var(--surface); border:1px solid var(--line); border-radius:8px;
+    padding:38px 40px; display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .profile-face.back{transform:rotateY(180deg); background:var(--surface-2);}
+  .profile-row{display:flex; justify-content:space-between; padding:11px 0; border-top:1px solid var(--line); gap:20px;}
+  .profile-row:first-of-type{border-top:none;}
+  .profile-row .label{color:var(--muted); font-size:0.85rem;}
+  .profile-row .value{font-family:'Fraunces', serif; font-size:1.05rem; text-align:right;}
+  .profile-row .value a, .contact-detail .value a, .footer-email a{color:inherit; text-decoration:none; transition:color .2s ease;}
+  .profile-row .value a:hover, .contact-detail .value a:hover, .footer-email a:hover{color:var(--gold-bright); text-decoration:underline;}
+  .profile-flip-btn{
+    align-self:flex-start; margin-top:22px; background:rgba(184,145,47,0.08);
+    border:1px solid var(--line); color:var(--gold-bright); padding:11px 22px;
+    border-radius:var(--radius); cursor:pointer; font-size:0.86rem; font-weight:500;
+    display:inline-flex; align-items:center; gap:8px;
+    transition:border-color .25s ease, background .25s ease, color .25s ease, transform .25s var(--ease);
+  }
+  .profile-flip-btn:hover{border-color:var(--gold); background:rgba(184,145,47,0.18); color:var(--ivory); transform:translateY(-2px);}
+  .profile-services{list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:12px 20px;}
+  .profile-services li{color:var(--ivory); font-size:0.95rem; padding-left:20px; position:relative;}
+  .profile-services li::before{content:''; position:absolute; left:0; top:9px; width:8px; height:1px; background:var(--gold-bright);}
+  .profile-quote{font-family:'Fraunces', serif; font-style:italic; color:var(--muted); font-size:1rem; margin-top:20px;}
+
+  /* ---------- Contact ---------- */
+  .contact-panel{
+    display:grid; grid-template-columns:1fr 1fr; gap:0;
+    border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;
+    background:var(--surface);
+    box-shadow:0 20px 50px -10px rgba(0,0,0,0.5);
+  }
+  .contact-info{background:var(--surface); padding:56px 48px; border-right:1px solid var(--line);}
+  .contact-info h2{font-size:clamp(1.8rem,3vw,2.3rem); margin-bottom:20px;}
+  .contact-info > p{color:var(--muted); max-width:38ch; margin-bottom:40px;}
+  .contact-detail{display:flex; gap:16px; padding:18px 0; border-top:1px solid var(--line);}
+  .contact-detail:first-of-type{border-top:none;}
+  .contact-detail .label{color:var(--muted); font-size:0.85rem; min-width:110px;}
+  .contact-detail .value{font-family:'Fraunces', serif; font-size:1.1rem;}
+  .contact-form{padding:56px 48px; background:var(--surface-2);}
+  .field{margin-bottom:24px; perspective:600px;}
+  .field label{display:block; font-size:0.85rem; color:var(--muted); margin-bottom:8px;}
+  .field input, .field textarea{
+    width:100%; background:transparent; border:none; border-bottom:1px solid var(--line);
+    color:var(--ivory); font-family:'Inter', sans-serif; font-size:1rem; padding:10px 2px;
+    transition:transform .3s var(--ease), border-color .3s ease;
+  }
+  .field input:focus, .field textarea:focus{outline:none; border-color:var(--gold); transform:translateZ(14px);}
+  .field textarea{resize:vertical; min-height:90px;}
+  .form-note{margin-top:14px; color:var(--gold-bright); font-size:0.88rem; opacity:0; transition:opacity .4s ease;}
+  .form-note.show{opacity:1;}
+
+  /* ---------- Footer ---------- */
+  footer{
+    background:var(--surface);
+    border-top:1px solid var(--line);
+    padding:0;
+    position:relative;
+    z-index:2;
+  }
+  .footer-grid{display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:40px; padding:64px 0 40px;}
+  .footer-brand .logo{font-size:1.4rem; display:inline-block; margin-bottom:16px;}
+  .footer-tagline{font-family:'Fraunces', serif; color:var(--gold-bright); font-size:1rem; margin-bottom:14px;}
+  .footer-blurb{color:var(--muted); font-size:0.94rem; max-width:34ch; margin-bottom:22px;}
+  .footer-social{display:flex; gap:12px;}
+  .footer-social a{width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:1px solid var(--line); border-radius:50%; color:var(--muted); transition:color 0.2s ease, border-color 0.2s ease, transform .3s ease;}
+  .footer-social a:hover{color:var(--gold-bright); border-color:var(--gold); transform:translateY(-3px) rotateY(180deg);}
+  .footer-social svg{width:16px; height:16px;}
+  .footer-col h4{font-size:1.02rem; margin-bottom:18px; color:var(--ivory); font-weight:500;}
+  .footer-col a{display:block; color:var(--muted); font-size:0.93rem; margin-bottom:12px; transition:color 0.2s ease;}
+  .footer-col a:hover{color:var(--gold-bright);}
+  .footer-bottom{display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; border-top:1px solid var(--line); padding:24px 0 40px;}
+  footer .muted{color:var(--muted); font-size:0.88rem;}
+
+  /* ---------- WhatsApp float ---------- */
+  .whatsapp-float{
+    position:fixed; bottom:26px; right:26px; width:58px; height:58px; border-radius:50%;
+    background:#25D366; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 6px 20px rgba(0,0,0,0.4); z-index:60; transition:transform 0.25s var(--ease);
+  }
+  .whatsapp-float::before{
+    content:''; position:absolute; inset:-6px; border-radius:50%; border:1px solid #25D366; opacity:.6;
+    animation:pulseRing 2.4s ease-out infinite;
+  }
+  @keyframes pulseRing{ 0%{transform:scale(.9); opacity:.7;} 100%{transform:scale(1.5); opacity:0;} }
+  .whatsapp-float:hover{transform:scale(1.08) rotateZ(-8deg);}
+  .whatsapp-float svg{width:28px; height:28px;}
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:900px){
+    .nav-links{display:none;}
+    .menu-toggle{display:flex;}
+    .services-grid{grid-template-columns:1fr 1fr;}
+    .process{grid-template-columns:1fr 1fr; row-gap:44px;}
+    .rail-line, .rail-fill{display:none;}
+    .about{grid-template-columns:1fr; gap:40px;}
+    .contact-panel{grid-template-columns:1fr;}
+    .contact-info{border-right:none; border-bottom:1px solid var(--line);}
+    .contact-info, .contact-form{padding:40px 28px;}
+    .about-list{grid-template-columns:1fr;}
+    .footer-grid{grid-template-columns:1fr 1fr;}
+  }
+  @media (max-width:560px){
+    .wrap{padding:0 20px;}
+    .nav{padding:18px 20px;}
+    .hero{padding:100px 0 60px;}
+    .hero-stats{gap:26px; flex-wrap:wrap;}
+    section{padding:80px 0;}
+    .services-grid{grid-template-columns:1fr;}
+    .process{grid-template-columns:1fr;}
+    .profile-inner{min-height:680px;}
+    .profile-face{padding:30px 22px;}
+    .profile-row{flex-direction:column; gap:4px;}
+    .profile-row .value{text-align:left;}
+    .footer-grid{grid-template-columns:1fr; padding:48px 0 32px;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    .reveal{opacity:1; transform:none; transition:none;}
+    .hero h1 .word, .hero p.lede, .hero-actions, .hero-stats{opacity:1; animation:none; transform:none;}
+    #scene{display:none;}
+    .whatsapp-float::before{animation:none;}
+  }
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <div class="loader-mark" aria-hidden="true">
+    <span style="animation-delay:.05s">C</span><span style="animation-delay:.1s">o</span><span style="animation-delay:.15s">r</span><span style="animation-delay:.2s">t</span><span style="animation-delay:.25s">i</span><span class="gold" style="animation-delay:.3s">v</span><span class="gold" style="animation-delay:.35s">a</span>
+  </div>
+</div>
+
+<canvas id="scene"></canvas>
+<div class="grain"></div>
+
+<header>
+  <nav class="nav">
+    <a href="#top" class="logo">Corti<span>va</span></a>
+    <div class="nav-links">
+      <a href="#services">Services</a>
+      <a href="#process">Process</a>
+      <a href="#about">About</a>
+      <a href="#profile">Profile</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <div class="nav-cta">
+      <a href="#contact" class="btn">Get a quote</a>
+    </div>
+    <button class="menu-toggle" aria-label="Menu"><span></span><span></span><span></span></button>
+  </nav>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero" id="hero">
+    <div class="wrap">
+      <div class="hero-eyebrow-line">Ahmedabad-based IT services partner</div>
+      <h1><span class="word">Software,</span> <span class="word">built</span> <span class="word">to</span> <span class="word">run</span> <span class="word">your</span> <span class="word"><em>whole</em></span> <span class="word">business.</span></h1>
+      <p class="lede">Cortiva designs and builds the websites, apps, cloud systems and AI tools that businesses use every day — from first sketch to the server that keeps it running.</p>
+      <div class="hero-actions">
+        <a href="#contact" class="btn">Start a project</a>
+        <a href="#services" class="btn btn-outline">See what we build</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><b data-count="6">0</b><span>service lines</span></div>
+        <div class="stat"><b data-count="24" data-suffix="h">0</b><span>average reply time</span></div>
+        <div class="stat"><b data-count="100" data-suffix="%">0</b><span>in-house delivery</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section id="services">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <h2>Everything under one roof</h2>
+        <p>Six service lines, one accountable team — nothing falls through the gap between vendors.</p>
+      </div>
+      <div class="services-grid">
+
+        <div class="flip-card reveal">
+          <div class="flip-inner">
+            <div class="flip-front">
+              <div><span class="service-index">01</span></div>
+              <h3>AI solutions</h3>
+              <span class="hint">Hover to read more</span>
+            </div>
+            <div class="flip-back">
+              <h4>AI solutions</h4>
+              <p>Custom AI models, automation and intelligent features built into your existing product or workflow — recommendation engines, chat assistants, document processing and more.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flip-card reveal">
+          <div class="flip-inner">
+            <div class="flip-front">
+              <div><span class="service-index">02</span></div>
+              <h3>Web development</h3>
+              <span class="hint">Hover to read more</span>
+            </div>
+            <div class="flip-back">
+              <h4>Web development</h4>
+              <p>Marketing sites, dashboards and web platforms built for speed, and easy for your team to update without calling us for every text change.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flip-card reveal">
+          <div class="flip-inner">
+            <div class="flip-front">
+              <div><span class="service-index">03</span></div>
+              <h3>Mobile apps</h3>
+              <span class="hint">Hover to read more</span>
+            </div>
+            <div class="flip-back">
+              <h4>Mobile apps</h4>
+              <p>Native and cross-platform apps for iOS and Android, from a single codebase where it makes sense.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flip-card reveal">
+          <div class="flip-inner">
+            <div class="flip-front">
+              <div><span class="service-index">04</span></div>
+              <h3>UI/UX design</h3>
+              <span class="hint">Hover to read more</span>
+            </div>
+            <div class="flip-back">
+              <h4>UI/UX design</h4>
+              <p>Interfaces people find easy to use on the first try, backed by real design systems, not one-off screens.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flip-card reveal">
+          <div class="flip-inner">
+            <div class="flip-front">
+              <div><span class="service-index">05</span></div>
+              <h3>Cloud integration</h3>
+              <span class="hint">Hover to read more</span>
+            </div>
+            <div class="flip-back">
+              <h4>Cloud integration</h4>
+              <p>Hosting, deployment pipelines and infrastructure on AWS, GCP or Azure that stays up as you grow, with monitoring so issues get caught before your users notice.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flip-card reveal">
+          <div class="flip-inner">
+            <div class="flip-front">
+              <div><span class="service-index">06</span></div>
+              <h3>Digital marketing</h3>
+              <span class="hint">Hover to read more</span>
+            </div>
+            <div class="flip-back">
+              <h4>Digital marketing</h4>
+              <p>SEO, campaigns and content that bring the right people to what you've built.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- PROCESS -->
+  <section id="process">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <h2>How a project runs</h2>
+        <p>Four stages, the same for a small site or a full platform — no surprises in between.</p>
+      </div>
+      <div class="process-rail">
+        <div class="rail-line"></div>
+        <div class="rail-fill" id="railFill"></div>
+        <div class="process">
+          <div class="process-step reveal">
+            <div class="num-node">01</div>
+            <h3>Discover</h3>
+            <p>We learn your business, your users and what "done" looks like before writing a line of code.</p>
+          </div>
+          <div class="process-step reveal">
+            <div class="num-node">02</div>
+            <h3>Design</h3>
+            <p>Wireframes and visuals you can react to early, so there are no surprises later.</p>
+          </div>
+          <div class="process-step reveal">
+            <div class="num-node">03</div>
+            <h3>Build</h3>
+            <p>Development in weekly checkpoints — you see progress, not just a final reveal.</p>
+          </div>
+          <div class="process-step reveal">
+            <div class="num-node">04</div>
+            <h3>Support</h3>
+            <p>Launch, then ongoing monitoring, fixes and small updates so the system keeps running.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="wrap about">
+      <div class="about-visual reveal" id="aboutTilt">
+        <p class="quote">"Good software should disappear into the background of your business, not sit on top of it as one more thing to manage."</p>
+        <p class="quote-attr">Cortiva, on how we build</p>
+      </div>
+      <div class="about-copy reveal">
+        <h2>An IT partner that stays after launch</h2>
+        <p>Cortiva is a software and web development team based in Ahmedabad, working with founders and operations teams who need technology that holds up — not just a demo that looks good once.</p>
+        <p>Every project is handled in-house, from the first design file to the server it runs on, so there's one team accountable for the whole thing. We keep teams small on purpose: you talk to the people actually building your product.</p>
+        <ul class="about-list">
+          <li>Fixed-scope and retainer projects</li>
+          <li>Direct access to your dev team</li>
+          <li>Post-launch maintenance included</li>
+          <li>Work across web, mobile and cloud</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- BUSINESS PROFILE -->
+  <section id="profile">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <h2>Business profile</h2>
+        <p>A quick look at who Cortiva is, what we do and how to reach us.</p>
+      </div>
+      <div class="profile-wrap reveal">
+        <div class="profile-card">
+          <div class="profile-inner" id="profileInner">
+            <div class="profile-face front">
+              <div>
+                <div class="profile-row"><span class="label">Business name</span><span class="value">Cortiva</span></div>
+                <div class="profile-row"><span class="label">Proprietor</span><span class="value">Ayush Pipaliya</span></div>
+                <div class="profile-row"><span class="label">Nature of business</span><span class="value">IT services & software development</span></div>
+                <div class="profile-row"><span class="label">Location</span><span class="value">Ahmedabad, Gujarat, India</span></div>
+                <div class="profile-row"><span class="label">Email</span><span class="value"><a href="mailto:aayupipaliya@gmail.com">aayupipaliya@gmail.com</a></span></div>
+                <div class="profile-row"><span class="label">Domain / Web</span><span class="value"><a href="https://aayupipaliya.com" target="_blank" rel="noopener">aayupipaliya.com</a></span></div>
+                <div class="profile-row"><span class="label">Phone</span><span class="value">63565 05765</span></div>
+                <div class="profile-row"><span class="label">Working hours</span><span class="value">Mon – Sat, 10am – 7pm</span></div>
+              </div>
+              <button class="profile-flip-btn" onclick="document.getElementById('profileInner').classList.add('flipped')">See services offered &rarr;</button>
+            </div>
+            <div class="profile-face back">
+              <div>
+                <h3 style="margin-bottom:20px; font-size:1.3rem;">Services offered</h3>
+                <ul class="profile-services">
+                  <li>AI Solutions</li>
+                  <li>Web Development</li>
+                  <li>Mobile Apps</li>
+                  <li>UI/UX Design</li>
+                  <li>Cloud Integration</li>
+                  <li>Digital Marketing</li>
+                </ul>
+                <p class="profile-quote">"One point of contact for the whole build — no account managers, no outsourced pieces."</p>
+              </div>
+              <button class="profile-flip-btn" onclick="document.getElementById('profileInner').classList.remove('flipped')">← Back to profile</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <h2>Have a project in mind?</h2>
+        <p>Tell us what you're building — we'll reply within a day.</p>
+      </div>
+      <div class="contact-panel reveal">
+        <div class="contact-info">
+          <h2>Talk to Cortiva</h2>
+          <p>For new projects, quotes or a quick technical question, reach us directly.</p>
+          <div class="contact-detail">
+            <span class="label">Email</span>
+            <span class="value">
+              <a href="mailto:aayupipaliya@gmail.com">aayupipaliya@gmail.com</a>
+              <span style="display:block; font-size:0.92rem; color:var(--muted); margin-top:3px;">
+                <a href="mailto:contact@aayupipaliya.com" style="color:var(--muted);">contact@aayupipaliya.com</a> &bull; <a href="mailto:info@aayupipaliya.com" style="color:var(--muted);">info@aayupipaliya.com</a>
+              </span>
+            </span>
+          </div>
+          <div class="contact-detail"><span class="label">Website</span><span class="value"><a href="https://aayupipaliya.com" target="_blank" rel="noopener">aayupipaliya.com</a></span></div>
+          <div class="contact-detail"><span class="label">Phone</span><span class="value"><a href="tel:6356505765">63565 05765</a></span></div>
+          <div class="contact-detail"><span class="label">Location</span><span class="value">Ahmedabad, Gujarat</span></div>
+          <div class="contact-detail"><span class="label">Hours</span><span class="value">Mon – Sat, 10am – 7pm</span></div>
+        </div>
+        <form class="contact-form" id="contactForm">
+          <div class="field">
+            <label for="fname">Name</label>
+            <input type="text" id="fname" required>
+          </div>
+          <div class="field">
+            <label for="fcontact">Phone or email</label>
+            <input type="text" id="fcontact" required>
+          </div>
+          <div class="field">
+            <label for="fmsg">What are you building?</label>
+            <textarea id="fmsg" required></textarea>
+          </div>
+          <button type="submit" class="btn">Send message</button>
+          <p class="form-note" id="formNote">Thanks — Cortiva will reply within a day.</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap footer-grid">
+    <div class="footer-brand">
+      <a href="#top" class="logo">Corti<span>va</span></a>
+      <p class="footer-tagline">Building Software That Lasts</p>
+      <p class="footer-blurb">Cortiva builds websites, apps and cloud systems that keep working long after launch.</p>
+      <p class="footer-email" style="margin-bottom:18px; font-size:0.92rem;">
+        <a href="mailto:aayupipaliya@gmail.com">aayupipaliya@gmail.com</a>
+      </p>
+      <div class="footer-social">
+        <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5C4.98 4.88 3.94 6 2.5 6S0 4.88 0 3.5 1.04 1 2.48 1s2.5 1.12 2.5 2.5zM.5 8.25h4V23h-4V8.25zM8.5 8.25h3.83v2.02h.05c.53-1 1.84-2.06 3.79-2.06 4.05 0 4.8 2.67 4.8 6.13V23h-4v-6.75c0-1.61-.03-3.68-2.24-3.68-2.25 0-2.6 1.75-2.6 3.56V23h-4V8.25z"/></svg></a>
+        <a href="#" aria-label="Twitter"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.44 4.83c-.8.35-1.66.6-2.56.7.92-.55 1.63-1.42 1.96-2.46-.86.51-1.82.88-2.83 1.08a4.45 4.45 0 0 0-7.58 4.06A12.63 12.63 0 0 1 3.11 3.9a4.44 4.44 0 0 0 1.38 5.93c-.73-.02-1.42-.22-2.02-.56v.06c0 2.08 1.48 3.82 3.44 4.21-.36.1-.74.15-1.13.15-.28 0-.55-.03-.81-.08.55 1.72 2.15 2.97 4.04 3-1.48 1.16-3.35 1.85-5.38 1.85-.35 0-.7-.02-1.04-.06 1.92 1.23 4.2 1.95 6.65 1.95 7.98 0 12.34-6.6 12.34-12.33 0-.19 0-.37-.01-.56.85-.6 1.58-1.36 2.16-2.23z"/></svg></a>
+        <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 3.25.15 4.77 1.69 4.92 4.92.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.15 3.23-1.66 4.77-4.92 4.92-1.27.06-1.64.07-4.85.07s-3.58-.01-4.85-.07c-3.26-.15-4.77-1.7-4.92-4.92-.06-1.27-.07-1.65-.07-4.85s.01-3.58.07-4.85C2.36 3.93 3.88 2.38 7.15 2.23 8.42 2.17 8.8 2.16 12 2.16zM12 0C8.74 0 8.33.01 7.05.07c-4.35.2-6.78 2.62-6.98 6.98C.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.2 4.36 2.62 6.78 6.98 6.98C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c4.35-.2 6.78-2.62 6.98-6.98.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95C23.72 2.7 21.3.27 16.95.07 15.67.01 15.26 0 12 0zm0 5.84A6.16 6.16 0 1 0 18.16 12 6.16 6.16 0 0 0 12 5.84zM12 16a4 4 0 1 1 4-4 4 4 0 0 1-4 4zm6.41-10.85a1.44 1.44 0 1 0 1.44 1.44 1.44 1.44 0 0 0-1.44-1.44z"/></svg></a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <a href="#about">About Us</a>
+      <a href="#services">Services</a>
+      <a href="#process">Process</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <div class="footer-col">
+      <h4>Services</h4>
+      <a href="#services">AI Solutions</a>
+      <a href="#services">Web Development</a>
+      <a href="#services">Mobile Apps</a>
+      <a href="#services">UI/UX Design</a>
+      <a href="#services">Cloud Integration</a>
+      <a href="#services">Digital Marketing</a>
+    </div>
+    <div class="footer-col">
+      <h4>Legal</h4>
+      <a href="#profile">Business Profile</a>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+      <a href="#">Cookie Policy</a>
+    </div>
+  </div>
+  <div class="wrap footer-bottom">
+    <p class="muted">Ahmedabad, Gujarat &bull; <a href="mailto:aayupipaliya@gmail.com" style="color:inherit;">aayupipaliya@gmail.com</a> &bull; <a href="https://aayupipaliya.com" target="_blank" rel="noopener" style="color:inherit;">aayupipaliya.com</a></p>
+    <p class="muted">&copy; 2026 Cortiva. All rights reserved.</p>
+  </div>
+</footer>
+
+<a href="https://wa.me/916356505765" class="whatsapp-float" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
+  <svg viewBox="0 0 32 32" fill="#fff" xmlns="http://www.w3.org/2000/svg"><path d="M16 0C7.163 0 0 7.163 0 16c0 2.822.738 5.593 2.14 8.03L0 32l8.16-2.104A15.9 15.9 0 0 0 16 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm0 29.09a13.05 13.05 0 0 1-6.652-1.822l-.478-.284-4.84 1.25 1.293-4.72-.312-.484A13.03 13.03 0 1 1 29.03 16 13.05 13.05 0 0 1 16 29.09zm7.14-9.77c-.39-.196-2.31-1.14-2.668-1.27-.358-.13-.618-.196-.878.196-.26.39-1.005 1.27-1.233 1.53-.227.26-.454.293-.844.098-.39-.196-1.646-.607-3.136-1.936-1.159-1.034-1.942-2.31-2.17-2.7-.227-.39-.024-.6.172-.795.176-.175.39-.455.585-.683.196-.227.26-.39.39-.65.13-.26.065-.487-.033-.683-.098-.196-.878-2.12-1.203-2.905-.317-.762-.64-.66-.878-.672-.227-.01-.487-.012-.747-.012-.26 0-.683.098-1.04.487-.358.39-1.366 1.335-1.366 3.256 0 1.92 1.398 3.777 1.593 4.037.196.26 2.75 4.2 6.664 5.89.932.402 1.659.642 2.226.822.935.297 1.786.255 2.459.155.75-.112 2.31-.944 2.637-1.856.326-.912.326-1.694.228-1.856-.098-.163-.358-.26-.748-.455z"/></svg>
+</a>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ---------- Loader ---------- */
+window.addEventListener('load', () => {
+  setTimeout(() => document.getElementById('loader').classList.add('done'), 900);
+});
+
+/* ---------- Mobile menu ---------- */
+const toggle = document.querySelector('.menu-toggle');
+const navLinks = document.querySelector('.nav-links');
+toggle?.addEventListener('click', () => {
+  const open = navLinks.style.display === 'flex';
+  navLinks.style.display = open ? 'none' : 'flex';
+  navLinks.style.flexDirection = 'column';
+  navLinks.style.position = 'absolute';
+  navLinks.style.top = '68px';
+  navLinks.style.left = '0';
+  navLinks.style.right = '0';
+  navLinks.style.background = '#0c0a08';
+  navLinks.style.padding = '24px 32px';
+  navLinks.style.borderBottom = '1px solid #332c20';
+  navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.style.display = 'none'));
+});
+
+/* ---------- Scroll reveal ---------- */
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const revealEls = document.querySelectorAll('.reveal');
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+}, { threshold: 0.15 });
+revealEls.forEach(el => io.observe(el));
+
+/* ---------- Active nav link on scroll ---------- */
+const sections = document.querySelectorAll('main section[id]');
+const navA = document.querySelectorAll('.nav-links a');
+const navIO = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if(e.isIntersecting){
+      navA.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id));
+    }
+  });
+}, { threshold: 0.5 });
+sections.forEach(s => navIO.observe(s));
+
+/* ---------- Count-up stats ---------- */
+document.querySelectorAll('.stat b').forEach(el => {
+  const target = parseInt(el.dataset.count, 10);
+  const suffix = el.dataset.suffix || '';
+  const statIO = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if(e.isIntersecting){
+        let cur = 0;
+        const step = Math.max(1, Math.round(target / 40));
+        const tick = () => {
+          cur = Math.min(target, cur + step);
+          el.textContent = cur + suffix;
+          if(cur < target) requestAnimationFrame(tick);
+        };
+        tick();
+        statIO.unobserve(el);
+      }
+    });
+  }, { threshold: 0.6 });
+  statIO.observe(el);
+});
+
+/* ---------- Process rail fill ---------- */
+const processSteps = document.querySelectorAll('.process-step');
+const railFill = document.getElementById('railFill');
+const stepIO = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if(e.isIntersecting) e.target.classList.add('active');
+  });
+  const activeCount = document.querySelectorAll('.process-step.active').length;
+  if(railFill) railFill.style.width = (activeCount / processSteps.length * 100) + '%';
+}, { threshold: 0.6 });
+processSteps.forEach(s => stepIO.observe(s));
+
+/* ---------- Service flip cards: tap-to-flip on touch ---------- */
+document.querySelectorAll('.flip-card').forEach(card => {
+  card.addEventListener('click', () => {
+    if(matchMedia('(hover:none)').matches) card.classList.toggle('flipped');
+  });
+});
+
+/* ---------- About card tilt ---------- */
+const aboutTilt = document.getElementById('aboutTilt');
+if(aboutTilt && !reduced){
+  aboutTilt.style.transformStyle = 'preserve-3d';
+  aboutTilt.addEventListener('mousemove', (e) => {
+    const r = aboutTilt.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    const rx = ((y - r.height/2)/(r.height/2)) * -6;
+    const ry = ((x - r.width/2)/(r.width/2)) * 6;
+    aboutTilt.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+  });
+  aboutTilt.addEventListener('mouseleave', () => { aboutTilt.style.transform = 'perspective(900px) rotateX(0) rotateY(0)'; });
+}
+
+/* ---------- Contact form (demo, no backend) ---------- */
+document.getElementById('contactForm')?.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const note = document.getElementById('formNote');
+  note.classList.add('show');
+  e.target.reset();
+});
+
+/* ---------- Three.js 3D background ---------- */
+(function(){
+  const canvas = document.getElementById('scene');
+  if(!canvas || typeof THREE === 'undefined') return;
+
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha:true, antialias:true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 100);
+  camera.position.z = 7;
+
+  const goldColor = new THREE.Color(0xb8912f);
+  const brightColor = new THREE.Color(0xe3c169);
+
+  // Wireframe icosahedron
+  const icoGeo = new THREE.IcosahedronGeometry(2.6, 1);
+  const wireGeo = new THREE.WireframeGeometry(icoGeo);
+  const wireMat = new THREE.LineBasicMaterial({ color: goldColor, transparent:true, opacity:0.35 });
+  const ico = new THREE.LineSegments(wireGeo, wireMat);
+  scene.add(ico);
+
+  const icoGeo2 = new THREE.IcosahedronGeometry(3.6, 0);
+  const wireGeo2 = new THREE.WireframeGeometry(icoGeo2);
+  const wireMat2 = new THREE.LineBasicMaterial({ color: brightColor, transparent:true, opacity:0.12 });
+  const ico2 = new THREE.LineSegments(wireGeo2, wireMat2);
+  scene.add(ico2);
+
+  // Particle field
+  const particleCount = 280;
+  const positions = new Float32Array(particleCount * 3);
+  for(let i=0;i<particleCount;i++){
+    const r = 5 + Math.random()*4;
+    const theta = Math.random()*Math.PI*2;
+    const phi = Math.acos((Math.random()*2)-1);
+    positions[i*3]   = r * Math.sin(phi) * Math.cos(theta);
+    positions[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+    positions[i*3+2] = r * Math.cos(phi);
+  }
+  const particleGeo = new THREE.BufferGeometry();
+  particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const particleMat = new THREE.PointsMaterial({ color: brightColor, size:0.035, transparent:true, opacity:0.55 });
+  const particles = new THREE.Points(particleGeo, particleMat);
+  scene.add(particles);
+
+  let mouseX = 0, mouseY = 0;
+  window.addEventListener('mousemove', (e) => {
+    mouseX = (e.clientX / window.innerWidth) - 0.5;
+    mouseY = (e.clientY / window.innerHeight) - 0.5;
+  });
+
+  let scrollY = 0;
+  window.addEventListener('scroll', () => { scrollY = window.scrollY; });
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  const clock = new THREE.Clock();
+  function animate(){
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+    const scrollRot = scrollY * 0.0007;
+
+    ico.rotation.x = t * 0.08 + scrollRot;
+    ico.rotation.y = t * 0.12 + scrollRot * 1.4;
+    ico2.rotation.x = -t * 0.05 - scrollRot * 0.6;
+    ico2.rotation.y = -t * 0.07;
+    particles.rotation.y = t * 0.02;
+
+    camera.position.x += (mouseX*1.2 - camera.position.x) * 0.03;
+    camera.position.y += (-mouseY*1.2 - camera.position.y) * 0.03;
+    camera.lookAt(scene.position);
+
+    renderer.render(scene, camera);
+  }
+  if(!reduced) animate();
+  else { renderer.render(scene, camera); }
+})();
+</script>
+</body>
+</html>
